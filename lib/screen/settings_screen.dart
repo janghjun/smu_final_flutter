@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:smp_final_project/screen/profile_screen.dart';
 import 'package:smp_final_project/screen/push_screen.dart';
+import 'package:smp_final_project/screen/question_screen.dart';
 import 'package:smp_final_project/screen/root_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
