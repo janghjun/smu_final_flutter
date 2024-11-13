@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:smp_final_project/screen/write_screen.dart';
 
 class QuestionScreen extends StatelessWidget {
   const QuestionScreen({Key? key}) : super(key: key);
