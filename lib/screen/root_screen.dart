@@ -4,6 +4,9 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:smp_final_project/screen/badge_screen.dart';
 import 'package:smp_final_project/screen/settings_screen.dart';
+import 'package:smp_final_project/screen/start_screen.dart';
+import 'package:smp_final_project/screen/step_counter_screen.dart';  // StepCounterScreen 추가
+import 'package:smp_final_project/screen/badge_screen.dart';  // BadgeScreen 추가
 
 class RootScreen extends StatefulWidget {
   const RootScreen({Key? key}) : super(key: key);
@@ -93,6 +96,25 @@ class _RootScreenState extends State<RootScreen> {
     ];
 
     return Scaffold(
+      appBar: _selectedIndex == 0 // 홈 탭에서만 AppBar 표시
+          ? AppBar(
+        title: const Text('시작 화면'),
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back,
+            size: 30.0,
+          ),
+          onPressed: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const StartScreen(),
+              ),
+            );
+          },
+        ),
+      )
+          : null, // 다른 탭에서는 AppBar를 표시하지 않음
       body: SafeArea(
         child: IndexedStack(
           index: _selectedIndex, // 선택된 탭에 맞는 페이지 표시
@@ -106,7 +128,7 @@ class _RootScreenState extends State<RootScreen> {
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(Icons.map),
-            label: '지도',
+            label: '홈',
           ),
           BottomNavigationBarItem(
             icon: Icon(FontAwesomeIcons.trophy),
