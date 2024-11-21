@@ -5,6 +5,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:smp_final_project/screen/badge_screen.dart';
 import 'package:smp_final_project/screen/settings_screen.dart';
+import 'package:location/location.dart';
 import 'package:smp_final_project/screen/start_screen.dart';
 
 class RootScreen extends StatefulWidget {

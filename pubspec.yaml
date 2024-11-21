@@ -41,6 +41,8 @@ dependencies:
   google_maps_flutter: 2.5.0
   geolocator: 10.1.0
   location: ^6.0.0
+  firebase_core: 2.19.0 # 파이어베이스 코어(기본) 플러그인
+  cloud_firestore: 4.11.0 # 파이어스토어 플러그인
 
 dev_dependencies:
   flutter_test:
