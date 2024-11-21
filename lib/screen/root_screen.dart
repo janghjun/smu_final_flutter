@@ -5,7 +5,6 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:smp_final_project/screen/badge_screen.dart';
 import 'package:smp_final_project/screen/settings_screen.dart';
-import 'package:smp_final_project/screen/start_screen.dart';
 
 class RootScreen extends StatefulWidget {
   const RootScreen({Key? key}) : super(key: key);
@@ -80,11 +79,6 @@ class _RootScreenState extends State<RootScreen> {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
         _seconds++; // 초 증가
-
-        // 60초가 지나면 분으로 전환
-        if (_seconds >= 60) {
-          _seconds = 0; // 초 초기화
-        }
       });
     });
   }
@@ -124,92 +118,98 @@ class _RootScreenState extends State<RootScreen> {
     return value.toString().padLeft(2, '0');
   }
 
+  Widget _buildInfoCard(String title, String value) {
+    return Expanded(
+      child: Card(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.0),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8.0),
+              Text(
+                value,
+                style: const TextStyle(fontSize: 20.0, color: Colors.blue),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final List<Widget> _pages = [
       Column(
-        mainAxisAlignment: MainAxisAlignment.center, // 위젯들 중앙 정렬
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          // 지도 영역
           Expanded(
             flex: 4,
-            child: _currentLatLng == null
-                ? const Center(child: CircularProgressIndicator())
-                : GoogleMap(
-              initialCameraPosition: CameraPosition(
-                target: _currentLatLng!,
-                zoom: 16,
-              ),
-              onMapCreated: (GoogleMapController controller) {
-                _mapController = controller;
-              },
-              myLocationEnabled: true,
-              myLocationButtonEnabled: true,
+            child: Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(20.0),
+                  child: _currentLatLng == null
+                      ? const Center(child: CircularProgressIndicator())
+                      : GoogleMap(
+                    initialCameraPosition: CameraPosition(
+                      target: _currentLatLng!,
+                      zoom: 16,
+                    ),
+                    onMapCreated: (GoogleMapController controller) {
+                      _mapController = controller;
+                    },
+                    myLocationEnabled: true,
+                    myLocationButtonEnabled: false,
+                  ),
+                ),
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20.0),
+                    color: Colors.black.withOpacity(0.2), // 불투명
+                  ),
+                ),
+              ],
             ),
           ),
+          // 하단 정보 영역
           Expanded(
-            flex: 1,
-            child: Center(
-              child: _isButtonVisible
-                  ? ElevatedButton(
-                onPressed: _startTimer,
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size(150, 50),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20.0),
-                  ),
-                  padding: const EdgeInsets.all(16.0),
+            flex: 2,
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildInfoCard('걸음 수', '0'),
+                    _buildInfoCard('거리', '0.0 km'),
+                    _buildInfoCard('시간', _formatTime(_seconds)),
+                  ],
                 ),
-                child: const Icon(
-                  Icons.play_arrow_outlined,
-                  size: 30.0,
-                  color: Colors.black,
+                const SizedBox(height: 16.0),
+                _isButtonVisible
+                    ? ElevatedButton(
+                  onPressed: _startTimer,
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size(150, 50),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20.0),
+                    ),
+                  ),
+                  child: const Text('시작'),
+                )
+                    : ElevatedButton(
+                  onPressed: _stopTimer,
+                  child: const Text('중지'),
                 ),
-              )
-                  : Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    _formatTime(_seconds),
-                    style: const TextStyle(
-                      fontSize: 24.0,
-                      color: Colors.black,
-                    ),
-                  ),
-                  _isTimerRunning
-                      ? ElevatedButton(
-                    onPressed: _stopTimer,
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size(150, 50),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20.0),
-                      ),
-                      padding: const EdgeInsets.all(16.0),
-                    ),
-                    child: const Icon(
-                      Icons.stop,
-                      size: 25.0,
-                      color: Colors.black,
-                    ),
-                  )
-                      : Container(),
-                  ElevatedButton(
-                    onPressed: _goHome,
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size(150, 50),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20.0),
-                      ),
-                      padding: const EdgeInsets.all(16.0),
-                    ),
-                    child: const Icon(
-                      Icons.arrow_back_ios,
-                      size: 25.0,
-                      color: Colors.black,
-                    ),
-                  ),
-                ],
-              ),
+              ],
             ),
           ),
         ],
@@ -219,11 +219,7 @@ class _RootScreenState extends State<RootScreen> {
     ];
 
     return Scaffold(
-      appBar: _selectedIndex == 0
-          ? AppBar(
-        title: const Text('홈 화면'),
-      )
-          : null,
+      appBar: AppBar(title: const Text('홈 화면')),
       body: SafeArea(
         child: IndexedStack(
           index: _selectedIndex,
@@ -234,7 +230,7 @@ class _RootScreenState extends State<RootScreen> {
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
         selectedItemColor: Colors.black,
-        items: const <BottomNavigationBarItem>[
+        items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: '홈',
