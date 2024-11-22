@@ -73,7 +73,13 @@ class _PushScreenState extends State<PushScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('알림'),
+        title: Text(
+            '알림',
+          style: TextStyle(
+            fontSize: 25.0,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         content: Text(message),
       ),
     );
@@ -92,7 +98,7 @@ class _PushScreenState extends State<PushScreen> {
     _savePushNotificationSetting(value);
 
     // 상태에 맞는 알림 전송
-    if (value) {
+    if(value) {
       _sendLocalNotification('알림을 켰습니다');
       _showModal('알림을 켰습니다');
     } else {
@@ -112,7 +118,13 @@ class _PushScreenState extends State<PushScreen> {
         child: Column(
           children: [
             SwitchListTile(
-              title: Text('푸시 알림 켜기'),
+              title: Text(
+                '푸시 알림 켜기',
+                style: TextStyle(
+                    fontSize: 25.0,
+                    fontWeight: FontWeight.bold,
+                ),
+              ),
               value: _isPushEnabled,
               onChanged: _onPushNotificationChanged,
             ),
