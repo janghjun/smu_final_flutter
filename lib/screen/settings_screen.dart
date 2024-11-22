@@ -38,8 +38,7 @@ class SettingsScreen extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => ProfileScreen()
-                    ),
+                        builder: (context) => ProfileScreen()),
                   );
                 },
                 style: ElevatedButton.styleFrom(
@@ -82,8 +81,7 @@ class SettingsScreen extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => PushScreen()
-                    ),
+                        builder: (context) => PushScreen()),
                   );
                 },
                 style: ElevatedButton.styleFrom(

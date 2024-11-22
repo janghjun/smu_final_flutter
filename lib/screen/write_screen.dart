@@ -1,5 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart'; // Provider import
 import 'package:smp_final_project/screen/question_screen.dart';
+import 'package:smp_final_project/state/title_state.dart'; // TitleState import
 
 class WriteScreen extends StatefulWidget {
   const WriteScreen({Key? key}) : super(key: key);
@@ -34,15 +37,41 @@ class _WriteScreenState extends State<WriteScreen> {
     });
   }
 
+  // Firestore에 제목과 내용을 저장하는 함수
+  Future<void> _saveToFirestore() async {
+    final title = _titleController.text;
+    final content = _contentController.text;
+
+    if (title.isEmpty || content.isEmpty) {
+      // 제목이나 내용이 비어있으면 저장하지 않음
+      return;
+    }
+
+    try {
+      await FirebaseFirestore.instance.collection('posts').add({
+        'title': title,
+        'content': content,
+        'createdAt': Timestamp.now(),
+      });
+
+      // TitleState의 상태 업데이트
+      Provider.of<TitleState>(context, listen: false).addTitle(title);
+
+      // 저장 후 이전 화면으로 돌아감
+      Navigator.pop(context, title);
+    } catch (e) {
+      print('Error saving to Firestore: $e');
+      // 오류 처리
+    }
+  }
+
   Future<bool> _onWillPop() async {
     return (await showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(
           '경고',
-          style: TextStyle(
-            fontWeight: FontWeight.bold
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
         content: Text('작성 내용이 저장되지 않을 수 있습니다. 계속 하시겠습니까?'),
         actions: [
@@ -50,26 +79,17 @@ class _WriteScreenState extends State<WriteScreen> {
             onPressed: () => Navigator.of(context).pop(false),
             child: Text(
               '취소',
-              style: TextStyle(
-                fontWeight: FontWeight.bold
-              ),
+              style: TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
           TextButton(
             onPressed: () {
               Navigator.of(context).pop(true);
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => QuestionScreen(),
-                ),
-              );
+              Navigator.pop(context);
             },
             child: Text(
               '확인',
-              style: TextStyle(
-                fontWeight: FontWeight.bold
-              ),
+              style: TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -130,14 +150,7 @@ class _WriteScreenState extends State<WriteScreen> {
               Align(
                 alignment: Alignment.bottomCenter,
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => QuestionScreen(),
-                      ),
-                    );
-                  },
+                  onPressed: _saveToFirestore, // Firestore에 저장하는 함수 연결
                   child: Text('확인'),
                   style: ElevatedButton.styleFrom(
                     minimumSize: Size(200.0, 60.0),
@@ -145,7 +158,7 @@ class _WriteScreenState extends State<WriteScreen> {
                     foregroundColor: Colors.black,
                     textStyle: TextStyle(
                       fontSize: 20.0,
-                      fontWeight: FontWeight.bold
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
