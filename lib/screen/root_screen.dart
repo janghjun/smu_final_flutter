@@ -267,86 +267,80 @@ class _RootScreenState extends State<RootScreen> {
   @override
   Widget build(BuildContext context) {
     final List<Widget> _pages = [
-      Column(
-        children: [
-          Expanded(
-            flex: 4,
-            child: Stack(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(20.0),
-                  child: _currentLatLng == null
-                      ? const Center(child: CircularProgressIndicator())
-                      : GoogleMap(
-                    initialCameraPosition: CameraPosition(
-                      target: _currentLatLng!,
-                      zoom: 16,
-                    ),
-                    onMapCreated: (GoogleMapController controller) {
-                      _mapController = controller;
-                    },
-                    myLocationEnabled: true,
-                    myLocationButtonEnabled: true,
-                    polylines: _polylines,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            flex: 2,
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildInfoCard('걸음 수', '$_stepCount'),
-                    _buildInfoCard('거리', '${_distance.toStringAsFixed(2)}km'),
-                    _buildInfoCard('시간', _formatTime(_seconds)),
-                  ],
-                ),
-                const SizedBox(height: 16.0),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    if (_isButtonVisible)
-                      ElevatedButton(
-                        onPressed: _startTimer,
-                        style: ElevatedButton.styleFrom(
-                          minimumSize: const Size(120.0, 50.0),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20.0),
-                          ),
-                          foregroundColor: Colors.black,
-                        ),
-                        child: const Text('시작'),
-                      )
-                    else
-                      ElevatedButton(
-                        onPressed: _stopTimer,
-                        style: ElevatedButton.styleFrom(foregroundColor: Colors.black),
-                        child: const Text('정지'),
+      // 루트 스크린 (AppBar 포함)
+      Scaffold(
+        appBar: _selectedIndex == 0
+            ? AppBar(
+          title: const Text('홈 화면'),
+        ) // 루트 화면에서만 앱바 표시
+            : null, // 다른 화면들에서는 앱바를 null로 설정하여 숨김
+        body: Column(
+          children: [
+            Expanded(
+              flex: 4,
+              child: Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(20.0),
+                    child: _currentLatLng == null
+                        ? const Center(child: CircularProgressIndicator())
+                        : GoogleMap(
+                      initialCameraPosition: CameraPosition(
+                        target: _currentLatLng!,
+                        zoom: 16,
                       ),
-                    ElevatedButton(
-                      onPressed: _endSession,
-                      style: ElevatedButton.styleFrom(foregroundColor: Colors.black),
-                      child: const Text('종료'),
+                      onMapCreated: (GoogleMapController controller) {
+                        _mapController = controller;
+                      },
+                      myLocationEnabled: true,
+                      myLocationButtonEnabled: false,
+                      polylines: _polylines,
                     ),
-                  ],
-                ),
-              ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+            // 경과 시간, 걸음 수, 이동 거리 정보 표시
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                children: [
+                  _buildInfoCard('시간', _formatTime(_seconds)),
+                  _buildInfoCard('걸음 수', _stepCount.toString()),
+                  _buildInfoCard('거리', _distance.toStringAsFixed(2) + ' km'),
+                ],
+              ),
+            ),
+            // 경로 추적 버튼 및 타이머
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: _isButtonVisible
+                  ? ElevatedButton(
+                onPressed: _startTracking,
+                child: const Text('경로 추적 시작'),
+                style: buttonStyle,
+              )
+                  : _isTimerRunning
+                  ? ElevatedButton(
+                onPressed: _stopTracking,
+                child: const Text('경로 추적 종료'),
+                style: buttonStyle,
+              )
+                  : ElevatedButton(
+                onPressed: _endSession,
+                child: const Text('홈으로 돌아가기'),
+                style: buttonStyle,
+              ),
+            ),
+          ],
+        ),
       ),
+      // 다른 화면들 (AppBar 없음)
       BadgeScreen(stepCount: _stepCount),
       SettingsScreen(),
     ];
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('홈 화면'),
-      ),
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
