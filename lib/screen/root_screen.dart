@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'dart:math'; // 수학 함수 및 상수 사용
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:geolocator/geolocator.dart';
+import 'package:pedometer/pedometer.dart';
 import 'package:smp_final_project/screen/badge_screen.dart';
 import 'package:smp_final_project/screen/settings_screen.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:geolocator/geolocator.dart';
 
 class RootScreen extends StatefulWidget {
   const RootScreen({Key? key}) : super(key: key);
@@ -18,10 +20,19 @@ class _RootScreenState extends State<RootScreen> {
   LatLng? _currentLatLng;
   late GoogleMapController _mapController;
 
+  final List<LatLng> _routePoints = [];
+  final Set<Polyline> _polylines = {};
+
   bool _isButtonVisible = true;
   bool _isTimerRunning = false;
   int _seconds = 0;
   late Timer _timer;
+
+  int _stepCount = 0;
+  double _distance = 0.0;
+
+  // pedometer 스트림을 사용하여 걸음 수 추적
+  StreamSubscription<StepCount>? _stepCountStreamSubscription;
 
   Future<void> _getCurrentLocation() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -43,21 +54,65 @@ class _RootScreenState extends State<RootScreen> {
     }
 
     final Position position = await Geolocator.getCurrentPosition();
+    _updateRoute(LatLng(position.latitude, position.longitude));
+  }
+
+  void _updateRoute(LatLng newPosition) {
     setState(() {
-      _currentLatLng = LatLng(position.latitude, position.longitude);
+      if (_currentLatLng != null) {
+        _distance += _calculateDistance(_currentLatLng!, newPosition);
+      }
+      _currentLatLng = newPosition;
+      _routePoints.add(newPosition);
+      _polylines.add(Polyline(
+        polylineId: const PolylineId('route'),
+        points: _routePoints,
+        color: Colors.blue,
+        width: 5,
+      ));
     });
 
     if (_mapController != null) {
       _mapController.animateCamera(
-        CameraUpdate.newLatLng(_currentLatLng!),
+        CameraUpdate.newLatLng(newPosition),
       );
     }
+  }
+
+  double _calculateDistance(LatLng start, LatLng end) {
+    const double earthRadius = 6371;
+    double latDiff = _degreeToRadian(end.latitude - start.latitude);
+    double lngDiff = _degreeToRadian(end.longitude - start.longitude);
+
+    double a =
+        sin(latDiff / 2) * sin(latDiff / 2) +
+            cos(_degreeToRadian(start.latitude)) *
+                cos(_degreeToRadian(end.latitude)) *
+                sin(lngDiff / 2) *
+                sin(lngDiff / 2);
+
+    double c = 2 * atan2(sqrt(a), sqrt(1 - a));
+    return earthRadius * c;
+  }
+
+  double _degreeToRadian(double degree) {
+    return degree * pi / 180;
   }
 
   @override
   void initState() {
     super.initState();
     _getCurrentLocation();
+    _startPedometer();
+  }
+
+  void _startPedometer() {
+    _stepCountStreamSubscription =
+        Pedometer.stepCountStream.listen((StepCount stepCount) {
+          setState(() {
+            _stepCount = stepCount.steps; // StepCount 객체에서 steps를 사용
+          });
+        });
   }
 
   void _onItemTapped(int index) {
@@ -86,16 +141,17 @@ class _RootScreenState extends State<RootScreen> {
     });
   }
 
-  void _goHome() {
+  void _endSession() {
     setState(() {
-      _seconds = 0;
-      _isButtonVisible = true;
+      _timer.cancel();
       _isTimerRunning = false;
+      _selectedIndex = 1; // 성과 화면으로 이동
     });
   }
 
   @override
   void dispose() {
+    _stepCountStreamSubscription?.cancel();
     _timer.cancel();
     super.dispose();
   }
@@ -105,7 +161,8 @@ class _RootScreenState extends State<RootScreen> {
     int minutes = (seconds % 3600) ~/ 60;
     int remainingSeconds = seconds % 60;
 
-    return '${_padZero(hours)}:${_padZero(minutes)}:${_padZero(remainingSeconds)}';
+    return '${_padZero(hours)}:${_padZero(minutes)}:${_padZero(
+        remainingSeconds)}';
   }
 
   String _padZero(int value) {
@@ -125,7 +182,8 @@ class _RootScreenState extends State<RootScreen> {
             children: [
               Text(
                 title,
-                style: const TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                    fontSize: 16.0, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8.0),
               Text(
@@ -162,6 +220,7 @@ class _RootScreenState extends State<RootScreen> {
                     },
                     myLocationEnabled: true,
                     myLocationButtonEnabled: false,
+                    polylines: _polylines,
                   ),
                 ),
               ],
@@ -174,60 +233,66 @@ class _RootScreenState extends State<RootScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _buildInfoCard('걸음 수', '0'),
-                    _buildInfoCard('거리', '0.0 km'),
+                    _buildInfoCard('걸음 수', '$_stepCount'),
+                    _buildInfoCard('거리', '${_distance.toStringAsFixed(2)} km'),
                     _buildInfoCard('시간', _formatTime(_seconds)),
                   ],
                 ),
                 const SizedBox(height: 16.0),
-                _isButtonVisible
-                    ? ElevatedButton(
-                  onPressed: _startTimer,
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: const Size(150, 50),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20.0),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    if (_isButtonVisible)
+                      ElevatedButton(
+                        onPressed: _startTimer,
+                        style: ElevatedButton.styleFrom(
+                          minimumSize: const Size(120, 50),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20.0),
+                          ),
+                        ),
+                        child: const Text('시작'),
+                      )
+                    else
+                      ElevatedButton(
+                        onPressed: _stopTimer,
+                        child: const Text('정지'),
+                      ),
+                    ElevatedButton(
+                      onPressed: _endSession,
+                      child: const Text('종료'),
                     ),
-                  ),
-                  child: const Text('시작'),
-                )
-                    : ElevatedButton(
-                  onPressed: _stopTimer,
-                  child: const Text('중지'),
+                  ],
                 ),
               ],
             ),
           ),
         ],
       ),
-      BadgeScreen(stepCount: _seconds),
-      const SettingsScreen(),
+      BadgeScreen(stepCount: _stepCount),
+      SettingsScreen(),
     ];
 
     return Scaffold(
-      appBar: AppBar(title: const Text('홈 화면')),
-      body: SafeArea(
-        child: IndexedStack(
-          index: _selectedIndex,
-          children: _pages,
-        ),
+      appBar: AppBar(
+        title: const Text('홈 화면'),
       ),
+      body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
-        selectedItemColor: Colors.black,
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
+            icon: Icon(FontAwesomeIcons.home),
             label: '홈',
           ),
           BottomNavigationBarItem(
             icon: Icon(FontAwesomeIcons.trophy),
-            label: '성과',
+            label: '성공',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: '환경설정',
+            icon: Icon(FontAwesomeIcons.gear),
+            label: '설정',
           ),
         ],
       ),
