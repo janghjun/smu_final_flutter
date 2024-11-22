@@ -317,16 +317,19 @@ class _RootScreenState extends State<RootScreen> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(20.0),
                           ),
+                          foregroundColor: Colors.black,
                         ),
                         child: const Text('시작'),
                       )
                     else
                       ElevatedButton(
                         onPressed: _stopTimer,
+                        style: ElevatedButton.styleFrom(foregroundColor: Colors.black),
                         child: const Text('정지'),
                       ),
                     ElevatedButton(
                       onPressed: _endSession,
+                      style: ElevatedButton.styleFrom(foregroundColor: Colors.black),
                       child: const Text('종료'),
                     ),
                   ],
