@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:table_calendar/table_calendar.dart'; // 캘린더 라이브러리
+import 'package:table_calendar/table_calendar.dart';
+import 'root_screen.dart'; // RootScreen 파일 임포트
 
 class BadgeScreen extends StatefulWidget {
   final int stepCount;
@@ -22,6 +23,16 @@ class _BadgeScreenState extends State<BadgeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('성과 달성'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            // RootScreen으로 이동
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => RootScreen()),
+            );
+          },
+        ),
       ),
       body: Column(
         children: [
