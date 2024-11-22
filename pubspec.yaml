@@ -44,7 +44,8 @@ dependencies:
   table_calendar: ^3.0.8
   firebase_core: 3.4.0 # 파이어베이스 코어(기본) 플러그인
   cloud_firestore: 5.3.0 # 파이어스토어 플러그인
-  firebase_messaging: 15.1.0
+  shared_preferences: 2.3.0 # 푸시 알림을 위한 플러그인
+  flutter_local_notifications: 17.2.3
 
 dev_dependencies:
   flutter_test:
