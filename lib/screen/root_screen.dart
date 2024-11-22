@@ -1,4 +1,4 @@
-import 'dart:async'; // 타이머 관련
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -18,13 +18,11 @@ class _RootScreenState extends State<RootScreen> {
   LatLng? _currentLatLng;
   late GoogleMapController _mapController;
 
-  // 타이머 관련 변수
   bool _isButtonVisible = true;
   bool _isTimerRunning = false;
-  int _seconds = 0; // 타이머 값을 초 단위로 관리
+  int _seconds = 0;
   late Timer _timer;
 
-  // 현재 위치 가져오기
   Future<void> _getCurrentLocation() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
@@ -62,47 +60,43 @@ class _RootScreenState extends State<RootScreen> {
     _getCurrentLocation();
   }
 
-  // 네비게이션 탭 변경
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
   }
 
-  // 타이머 시작
   void _startTimer() {
     setState(() {
-      _isButtonVisible = false; // 시작 버튼 숨기기
-      _isTimerRunning = true; // 타이머 실행 상태로 변경
+      _isButtonVisible = false;
+      _isTimerRunning = true;
     });
 
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
-        _seconds++; // 초 증가
+        _seconds++;
       });
     });
   }
 
-  // 타이머 멈추기
   void _stopTimer() {
     setState(() {
-      _timer.cancel(); // 타이머 멈추기
-      _isTimerRunning = false; // 타이머 실행 상태 종료
+      _timer.cancel();
+      _isTimerRunning = false;
     });
   }
 
-  // 홈으로 돌아가기 (되돌아가기 버튼)
   void _goHome() {
     setState(() {
-      _seconds = 0; // 타이머 리셋
-      _isButtonVisible = true; // 시작 버튼 표시
-      _isTimerRunning = false; // 타이머 실행 상태 종료
+      _seconds = 0;
+      _isButtonVisible = true;
+      _isTimerRunning = false;
     });
   }
 
   @override
   void dispose() {
-    _timer.cancel(); // 타이머 리소스 해제
+    _timer.cancel();
     super.dispose();
   }
 
@@ -150,7 +144,6 @@ class _RootScreenState extends State<RootScreen> {
     final List<Widget> _pages = [
       Column(
         children: [
-          // 지도 영역
           Expanded(
             flex: 4,
             child: Stack(
@@ -171,16 +164,9 @@ class _RootScreenState extends State<RootScreen> {
                     myLocationButtonEnabled: false,
                   ),
                 ),
-                Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20.0),
-                    color: Colors.black.withOpacity(0.2), // 불투명
-                  ),
-                ),
               ],
             ),
           ),
-          // 하단 정보 영역
           Expanded(
             flex: 2,
             child: Column(
@@ -214,7 +200,7 @@ class _RootScreenState extends State<RootScreen> {
           ),
         ],
       ),
-      BadgeScreen(stepCount: 0),
+      BadgeScreen(stepCount: _seconds),
       const SettingsScreen(),
     ];
 
