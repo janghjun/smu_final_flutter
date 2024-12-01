@@ -59,4 +59,5 @@ class DefaultFirebaseOptions {
     projectId: 'smp-final-project-c90d6',
     storageBucket: 'smp-final-project-c90d6.firebasestorage.app',
   );
+
 }
