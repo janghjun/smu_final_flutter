@@ -1,9 +1,10 @@
 import 'dart:async';
-import 'dart:math'; // 수학 함수 및 상수 사용
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:pedometer/pedometer.dart';
 import 'package:smp_final_project/screen/badge_screen.dart';
+import 'package:smp_final_project/screen/calendar_screen.dart';
 import 'package:smp_final_project/screen/settings_screen.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
@@ -23,15 +24,13 @@ class _RootScreenState extends State<RootScreen> {
   final List<LatLng> _routePoints = [];
   final Set<Polyline> _polylines = {};
 
-  bool _isButtonVisible = true;
   bool _isTimerRunning = false;
   int _seconds = 0;
-  late Timer _timer;
+  Timer? _timer;
 
   int _stepCount = 0;
   double _distance = 0.0;
 
-  // pedometer 스트림을 사용하여 걸음 수 추적
   StreamSubscription<StepCount>? _stepCountStreamSubscription;
 
   Future<void> _getCurrentLocation() async {
@@ -44,14 +43,10 @@ class _RootScreenState extends State<RootScreen> {
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        return;
-      }
+      if (permission == LocationPermission.denied) return;
     }
 
-    if (permission == LocationPermission.deniedForever) {
-      return;
-    }
+    if (permission == LocationPermission.deniedForever) return;
 
     final Position position = await Geolocator.getCurrentPosition();
     _updateRoute(LatLng(position.latitude, position.longitude));
@@ -72,32 +67,24 @@ class _RootScreenState extends State<RootScreen> {
       ));
     });
 
-    if (_mapController != null) {
-      _mapController.animateCamera(
-        CameraUpdate.newLatLng(newPosition),
-      );
-    }
+    _mapController.animateCamera(CameraUpdate.newLatLng(newPosition));
   }
 
   double _calculateDistance(LatLng start, LatLng end) {
-    const double earthRadius = 6371;
+    const double earthRadius = 6371; // Earth radius in kilometers
     double latDiff = _degreeToRadian(end.latitude - start.latitude);
     double lngDiff = _degreeToRadian(end.longitude - start.longitude);
 
-    double a =
-        sin(latDiff / 2) * sin(latDiff / 2) +
-            cos(_degreeToRadian(start.latitude)) *
-                cos(_degreeToRadian(end.latitude)) *
-                sin(lngDiff / 2) *
-                sin(lngDiff / 2);
+    double a = sin(latDiff / 2) * sin(latDiff / 2) +
+        cos(_degreeToRadian(start.latitude)) *
+            cos(_degreeToRadian(end.latitude)) *
+            sin(lngDiff / 2) *
+            sin(lngDiff / 2);
 
-    double c = 2 * atan2(sqrt(a), sqrt(1 - a));
-    return earthRadius * c;
+    return 2 * earthRadius * atan2(sqrt(a), sqrt(1 - a));
   }
 
-  double _degreeToRadian(double degree) {
-    return degree * pi / 180;
-  }
+  double _degreeToRadian(double degree) => degree * pi / 180;
 
   @override
   void initState() {
@@ -110,20 +97,13 @@ class _RootScreenState extends State<RootScreen> {
     _stepCountStreamSubscription =
         Pedometer.stepCountStream.listen((StepCount stepCount) {
           setState(() {
-            _stepCount = stepCount.steps; // StepCount 객체에서 steps를 사용
+            _stepCount = stepCount.steps;
           });
         });
   }
 
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
-
   void _startTimer() {
     setState(() {
-      _isButtonVisible = false;
       _isTimerRunning = true;
     });
 
@@ -136,23 +116,33 @@ class _RootScreenState extends State<RootScreen> {
 
   void _stopTimer() {
     setState(() {
-      _timer.cancel();
+      _timer?.cancel();
       _isTimerRunning = false;
     });
   }
 
   void _endSession() {
     setState(() {
-      _timer.cancel();
+      _timer?.cancel();
       _isTimerRunning = false;
-      _selectedIndex = 1; // 성과 화면으로 이동
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => BadgeScreen(
+            stepCount: _stepCount,
+            // 추가된 이동 거리와 시간을 전달
+            goalSteps: 10000, // 예시 목표 걸음 수
+          ),
+        ),
+      );
     });
   }
 
   @override
   void dispose() {
     _stepCountStreamSubscription?.cancel();
-    _timer.cancel();
+    _timer?.cancel();
     super.dispose();
   }
 
@@ -161,12 +151,118 @@ class _RootScreenState extends State<RootScreen> {
     int minutes = (seconds % 3600) ~/ 60;
     int remainingSeconds = seconds % 60;
 
-    return '${_padZero(hours)}:${_padZero(minutes)}:${_padZero(
-        remainingSeconds)}';
+    return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
   }
 
-  String _padZero(int value) {
-    return value.toString().padLeft(2, '0');
+  @override
+  Widget build(BuildContext context) {
+    final List<Widget> _pages = [
+      _buildHomePage(),
+      BadgeScreen(stepCount: _stepCount),
+      CalendarScreen(
+        runningGoals: {},
+        onGoalSet: (date, goal) {
+          // 캘린더 목표 설정 시 실행되는 콜백
+        },
+      ),
+      SettingsScreen(),
+    ];
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('홈 화면'),
+      ),
+      body: _pages[_selectedIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        onTap: (index) {
+          setState(() {
+            _selectedIndex = index;
+          });
+        },
+        items: [
+          BottomNavigationBarItem(
+            icon: Icon(
+              FontAwesomeIcons.home,
+              color: _selectedIndex == 0 ? Colors.blue : Colors.grey,
+            ),
+            label: '홈',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(
+              FontAwesomeIcons.trophy,
+              color: _selectedIndex == 1 ? Colors.blue : Colors.grey,
+            ),
+            label: '성과',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(
+              FontAwesomeIcons.calendar,
+              color: _selectedIndex == 2 ? Colors.blue : Colors.grey,
+            ),
+            label: '캘린더',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(
+              FontAwesomeIcons.gear,
+              color: _selectedIndex == 3 ? Colors.blue : Colors.grey,
+            ),
+            label: '설정',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHomePage() {
+    return Column(
+      children: [
+        Expanded(
+          flex: 4,
+          child: _currentLatLng == null
+              ? const Center(child: CircularProgressIndicator())
+              : GoogleMap(
+            initialCameraPosition: CameraPosition(
+              target: _currentLatLng!,
+              zoom: 16,
+            ),
+            onMapCreated: (controller) => _mapController = controller,
+            myLocationEnabled: true,
+            myLocationButtonEnabled: false,
+            polylines: _polylines,
+          ),
+        ),
+        Expanded(
+          flex: 2,
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildInfoCard('걸음 수', '$_stepCount'),
+                  _buildInfoCard('거리', '${_distance.toStringAsFixed(2)} km'),
+                  _buildInfoCard('시간', _formatTime(_seconds)),
+                ],
+              ),
+              const SizedBox(height: 16.0),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  ElevatedButton(
+                    onPressed: _isTimerRunning ? _stopTimer : _startTimer,
+                    child: Text(_isTimerRunning ? '정지' : '시작'),
+                  ),
+                  ElevatedButton(
+                    onPressed: _endSession,
+                    child: const Text('종료'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _buildInfoCard(String title, String value) {
@@ -188,113 +284,12 @@ class _RootScreenState extends State<RootScreen> {
               const SizedBox(height: 8.0),
               Text(
                 value,
-                style: const TextStyle(fontSize: 20.0, color: Colors.blue),
+                style: const TextStyle(
+                    fontSize: 20.0, color: Colors.blueAccent),
               ),
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final List<Widget> _pages = [
-      Column(
-        children: [
-          Expanded(
-            flex: 4,
-            child: Stack(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(20.0),
-                  child: _currentLatLng == null
-                      ? const Center(child: CircularProgressIndicator())
-                      : GoogleMap(
-                    initialCameraPosition: CameraPosition(
-                      target: _currentLatLng!,
-                      zoom: 16,
-                    ),
-                    onMapCreated: (GoogleMapController controller) {
-                      _mapController = controller;
-                    },
-                    myLocationEnabled: true,
-                    myLocationButtonEnabled: false,
-                    polylines: _polylines,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            flex: 2,
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildInfoCard('걸음 수', '$_stepCount'),
-                    _buildInfoCard('거리', '${_distance.toStringAsFixed(2)} km'),
-                    _buildInfoCard('시간', _formatTime(_seconds)),
-                  ],
-                ),
-                const SizedBox(height: 16.0),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    if (_isButtonVisible)
-                      ElevatedButton(
-                        onPressed: _startTimer,
-                        style: ElevatedButton.styleFrom(
-                          minimumSize: const Size(120, 50),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20.0),
-                          ),
-                        ),
-                        child: const Text('시작'),
-                      )
-                    else
-                      ElevatedButton(
-                        onPressed: _stopTimer,
-                        child: const Text('정지'),
-                      ),
-                    ElevatedButton(
-                      onPressed: _endSession,
-                      child: const Text('종료'),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-      BadgeScreen(stepCount: _stepCount),
-      SettingsScreen(),
-    ];
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('홈 화면'),
-      ),
-      body: _pages[_selectedIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(FontAwesomeIcons.home),
-            label: '홈',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(FontAwesomeIcons.trophy),
-            label: '성공',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(FontAwesomeIcons.gear),
-            label: '설정',
-          ),
-        ],
       ),
     );
   }
