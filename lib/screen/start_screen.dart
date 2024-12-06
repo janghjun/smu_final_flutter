@@ -5,6 +5,8 @@ import 'package:smp_final_project/screen/main_view_model_google.dart'; // 구글
 import 'package:smp_final_project/screen/kakao_login.dart'; // 카카오 로그인
 import 'package:smp_final_project/screen/google_login.dart'; // 구글 로그인
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
+import 'package:smp_final_project/provider/theme_provider.dart'; // ThemeProvider import
 
 class StartScreen extends StatefulWidget {
   const StartScreen({
@@ -30,6 +32,18 @@ class _StartScreenState extends State<StartScreen> {
           'Lets Run!!',
           style: TextStyle(fontSize: 30.0, fontWeight: FontWeight.w700),
         ),
+        actions: [
+          IconButton(
+            icon: Icon(
+              Icons.dark_mode,
+              size: 30.0,
+            ),
+            onPressed: () {
+              // 다크모드 토글
+              context.read<ThemeProvider>().toggleTheme();
+            },
+          ),
+        ],
       ),
       body: SafeArea(
         child: Center(
