@@ -53,7 +53,7 @@ class _StepCounterScreenState extends State<StepCounterScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('걸음 수 측정'),
+        title: const Text('걸음 수 측정'),
       ),
       body: Center(
         child: Column(
@@ -62,11 +62,11 @@ class _StepCounterScreenState extends State<StepCounterScreen> {
             if (_errorMessage.isNotEmpty)
               Text(
                 _errorMessage,
-                style: TextStyle(fontSize: 16, color: Colors.red),
+                style: const TextStyle(fontSize: 16, color: Colors.red),
               ),
             Text(
               '오늘 걸음 수: $_steps',
-              style: TextStyle(fontSize: 24),
+              style: const TextStyle(fontSize: 24),
             ),
           ],
         ),
