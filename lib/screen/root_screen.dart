@@ -28,11 +28,42 @@ class _RootScreenState extends State<RootScreen> {
   int _seconds = 0;
   Timer? _timer;
 
-  int _stepCount = 0;
-  double _distance = 0.0;
+  int _stepCount = 0; // 걸음 수 저장
+  double _distance = 0.0; // 거리 저장
 
   StreamSubscription<StepCount>? _stepCountStreamSubscription;
 
+  @override
+  void initState() {
+    super.initState();
+    _getCurrentLocation(); // 현재 위치 가져오기
+    _startPedometer(); // 걸음 수 측정 시작
+  }
+
+  @override
+  void dispose() {
+    _stepCountStreamSubscription?.cancel();
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  // 걸음 수 측정
+  void _startPedometer() {
+    _stepCountStreamSubscription = Pedometer.stepCountStream.listen(
+          (StepCount stepCount) {
+        setState(() {
+          _stepCount = stepCount.steps; // 실시간 걸음 수 업데이트
+        });
+      },
+      onError: (error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('걸음 수 센서 오류: $error')),
+        );
+      },
+    );
+  }
+
+  // 현재 위치 가져오기
   Future<void> _getCurrentLocation() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
@@ -52,6 +83,7 @@ class _RootScreenState extends State<RootScreen> {
     _updateRoute(LatLng(position.latitude, position.longitude));
   }
 
+  // 경로 업데이트
   void _updateRoute(LatLng newPosition) {
     setState(() {
       if (_currentLatLng != null) {
@@ -70,8 +102,9 @@ class _RootScreenState extends State<RootScreen> {
     _mapController.animateCamera(CameraUpdate.newLatLng(newPosition));
   }
 
+  // 거리 계산
   double _calculateDistance(LatLng start, LatLng end) {
-    const double earthRadius = 6371; // Earth radius in kilometers
+    const double earthRadius = 6371; // 지구 반지름 (단위: km)
     double latDiff = _degreeToRadian(end.latitude - start.latitude);
     double lngDiff = _degreeToRadian(end.longitude - start.longitude);
 
@@ -86,27 +119,11 @@ class _RootScreenState extends State<RootScreen> {
 
   double _degreeToRadian(double degree) => degree * pi / 180;
 
-  @override
-  void initState() {
-    super.initState();
-    _getCurrentLocation();
-    _startPedometer();
-  }
-
-  void _startPedometer() {
-    _stepCountStreamSubscription =
-        Pedometer.stepCountStream.listen((StepCount stepCount) {
-          setState(() {
-            _stepCount = stepCount.steps;
-          });
-        });
-  }
-
+  // 타이머 시작
   void _startTimer() {
     setState(() {
       _isTimerRunning = true;
     });
-
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
         _seconds++;
@@ -114,6 +131,7 @@ class _RootScreenState extends State<RootScreen> {
     });
   }
 
+  // 타이머 정지
   void _stopTimer() {
     setState(() {
       _timer?.cancel();
@@ -121,6 +139,7 @@ class _RootScreenState extends State<RootScreen> {
     });
   }
 
+  // 세션 종료
   void _endSession() {
     setState(() {
       _timer?.cancel();
@@ -131,21 +150,14 @@ class _RootScreenState extends State<RootScreen> {
         MaterialPageRoute(
           builder: (context) => BadgeScreen(
             stepCount: _stepCount,
-            // 추가된 이동 거리와 시간을 전달
-            goalSteps: 10000, // 예시 목표 걸음 수
+            goalSteps: 10000, // 목표 걸음 수 (예시)
           ),
         ),
       );
     });
   }
 
-  @override
-  void dispose() {
-    _stepCountStreamSubscription?.cancel();
-    _timer?.cancel();
-    super.dispose();
-  }
-
+  // 시간 포맷팅
   String _formatTime(int seconds) {
     int hours = seconds ~/ 3600;
     int minutes = (seconds % 3600) ~/ 60;
