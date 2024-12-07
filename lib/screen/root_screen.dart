@@ -20,8 +20,8 @@ class _RootScreenState extends State<RootScreen> {
   LatLng? _currentLatLng;
   late GoogleMapController _mapController;
 
-  final List<LatLng> _routePoints = [];
-  final Set<Polyline> _polylines = {};
+  final List<LatLng> _routePoints = [];  // 경로 점들을 저장하는 리스트
+  final Set<Polyline> _polylines = {};   // 경로 선을 저장하는 Set
 
   bool _isButtonVisible = true;
   bool _isTimerRunning = false;
@@ -63,18 +63,20 @@ class _RootScreenState extends State<RootScreen> {
         _distance += _calculateDistance(_currentLatLng!, newPosition);
       }
       _currentLatLng = newPosition;
-      _routePoints.add(newPosition);
+      _routePoints.add(newPosition);  // 경로 점 추가
+
+      // Polyline을 사용하여 선으로 경로 표현
       _polylines.add(Polyline(
         polylineId: const PolylineId('route'),
-        points: _routePoints,
-        color: Colors.blue,
-        width: 5,
+        points: _routePoints,  // 경로 점들을 연결
+        color: Colors.blue,    // 선의 색상
+        width: 5,              // 선의 두께
       ));
     });
 
     if (_mapController != null) {
       _mapController.animateCamera(
-        CameraUpdate.newLatLng(newPosition),
+        CameraUpdate.newLatLng(newPosition),  // 맵 카메라를 새 위치로 이동
       );
     }
   }
@@ -127,10 +129,17 @@ class _RootScreenState extends State<RootScreen> {
       _isTimerRunning = true;
     });
 
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) async {
       setState(() {
         _seconds++;
       });
+
+      try {
+        final Position position = await Geolocator.getCurrentPosition();
+        _updateRoute(LatLng(position.latitude, position.longitude));
+      } catch(e) {
+        print('Error getting location: $e');
+      }
     });
   }
 
@@ -220,7 +229,7 @@ class _RootScreenState extends State<RootScreen> {
                     },
                     myLocationEnabled: true,
                     myLocationButtonEnabled: false,
-                    polylines: _polylines,
+                    polylines: _polylines,  // Polyline을 지도에 표시
                   ),
                 ),
               ],

@@ -50,6 +50,8 @@ dependencies:
   kakao_flutter_sdk_user: ^1.9.6
   firebase_auth: ^5.3.3
   google_sign_in: ^6.2.2
+  flutter_polyline_points: 1.0.0
+  google_maps_routes: ^1.1.2
 
 dev_dependencies:
   flutter_test:

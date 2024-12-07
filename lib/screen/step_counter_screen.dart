@@ -14,6 +14,7 @@ class StepCounterScreen extends StatefulWidget {
 class _StepCounterScreenState extends State<StepCounterScreen> {
   late StreamSubscription<StepCount> _stepCountStreamSubscription;
   int _steps = 0;
+  String _errorMessage = '';
 
   @override
   void initState() {
@@ -24,6 +25,9 @@ class _StepCounterScreenState extends State<StepCounterScreen> {
       _onStepCount,
       onError: (error) {
         print('Error in step count stream: $error');
+        setState(() {
+          _errorMessage = '걸음 수 스트림 에러 : $error';
+        });
       },
       onDone: () {
         print('Step count stream is done');
@@ -56,6 +60,11 @@ class _StepCounterScreenState extends State<StepCounterScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            if(_errorMessage.isNotEmpty)
+                Text(
+                  _errorMessage,
+                  style: TextStyle(fontSize: 16, color: Colors.red),
+                ),
             Text(
               '오늘 걸음 수: $_steps',
               style: TextStyle(fontSize: 24),

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 class CalendarScreen extends StatefulWidget {
-  final Map<DateTime, String> runningGoals;
+  final Map<DateTime, List<String>> runningGoals;
   final Function(DateTime, String) onGoalSet;
 
   const CalendarScreen({
@@ -55,59 +55,64 @@ class _CalendarScreenState extends State<CalendarScreen> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Expanded(
-          flex: 1,
-          child: TableCalendar(
-            firstDay: DateTime.utc(2020, 1, 1),
-            lastDay: DateTime.utc(2100, 12, 31),
-            focusedDay: _focusedDay,
-            selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-            onDaySelected: (selectedDay, focusedDay) {
-              setState(() {
-                _selectedDay = selectedDay;
-                _focusedDay = focusedDay;
-              });
-              _setRunningGoal(selectedDay);
-            },
-            calendarStyle: const CalendarStyle(
-              todayDecoration: BoxDecoration(
-                color: Colors.blueAccent,
-                shape: BoxShape.circle,
-              ),
-              selectedDecoration: BoxDecoration(
-                color: Colors.amber,
-                shape: BoxShape.circle,
-              ),
-            ),
-            headerStyle: const HeaderStyle(
-              formatButtonVisible: false,
-              titleCentered: true,
-            ),
-          ),
+    @override
+    Widget build(BuildContext context) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('캘린더'),
         ),
-        const Divider(),
-        if (widget.runningGoals.containsKey(_selectedDay ?? DateTime.now())) ...[
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Text(
-              '목표: ${widget.runningGoals[_selectedDay ?? DateTime.now()]}',
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        body: Column(
+          children: [
+            Expanded(
+              child: TableCalendar(
+                firstDay: DateTime.utc(2020, 1, 1),
+                lastDay: DateTime.utc(2100, 12, 31),
+                focusedDay: _focusedDay,
+                selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                onDaySelected: (selectedDay, focusedDay) {
+                  setState(() {
+                    _selectedDay = selectedDay;
+                    _focusedDay = focusedDay;
+                  });
+                  _setRunningGoal(selectedDay);
+                },
+                calendarStyle: const CalendarStyle(
+                  todayDecoration: BoxDecoration(
+                    color: Colors.blueAccent,
+                    shape: BoxShape.circle,
+                  ),
+                  selectedDecoration: BoxDecoration(
+                    color: Colors.amber,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                headerStyle: const HeaderStyle(
+                  formatButtonVisible: false,
+                  titleCentered: true,
+                ),
+              ),
             ),
-          ),
-        ] else ...[
-          const Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Text(
-              '설정된 목표가 없습니다.',
-              style: TextStyle(fontSize: 16),
-            ),
-          ),
-        ],
-      ],
-    );
-  }
+            const Divider(),
+            if (_selectedDay != null &&
+                widget.runningGoals[_selectedDay!] != null) ...[
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(
+                  '목표 (${_selectedDay!.toLocal()}):\n${widget.runningGoals[_selectedDay!]!.join(", ")}',
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ] else ...[
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Text(
+                  '설정된 목표가 없습니다.',
+                  style: TextStyle(fontSize: 16),
+                ),
+              ),
+            ],
+          ],
+        ),
+      );
+    }
 }
