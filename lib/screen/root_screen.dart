@@ -320,7 +320,11 @@ class _RootScreenState extends State<RootScreen> {
       ),
       SettingsScreen(),
     ];
-
+    void _onItemTapped(int index) {
+      setState(() {
+        _selectedIndex = index;
+      });
+    }
     return Scaffold(
       appBar: AppBar(
         title: const Text('홈 화면'),
