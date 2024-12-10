@@ -6,6 +6,7 @@ import 'package:provider/provider.dart'; // Provider import
 import 'package:smp_final_project/state/title_state.dart'; // TitleState import
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart' as kakao;
 import 'package:smp_final_project/provider/theme_provider.dart'; // ThemeProvider import
+import 'package:flutter_localizations/flutter_localizations.dart';  // 추가
 
 void main() async {
   // Kakao SDK 초기화
@@ -42,6 +43,15 @@ class MyApp extends StatelessWidget {
           ),
           home: const StartScreen(title: "Let's run!!"), // 앱의 시작 화면
           debugShowCheckedModeBanner: false,
+          localizationsDelegates: [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: [
+            Locale('ko', 'KR'),  // 한국어 지원
+            Locale('en', 'US'),  // 영어 지원
+          ],
         );
       },
     );
