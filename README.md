@@ -2,6 +2,8 @@
 
 A new Flutter project.
 
+2024. SMU Flutter Team Project
+
 ## Getting Started
 
 This project is a starting point for a Flutter application.
