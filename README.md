@@ -4,6 +4,11 @@ A new Flutter project.
 
 2024. SMU Flutter Team Project
 
+## 실행 화면
+
+![Image](https://github.com/user-attachments/assets/6eba8803-c65f-4f62-ad1f-7aeaa7089679)
+
+
 ## Getting Started
 
 This project is a starting point for a Flutter application.
