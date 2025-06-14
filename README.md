@@ -5,11 +5,7 @@ Flutter 기반으로 제작되었으며, **카카오/구글 소셜 로그인**, 
 
 ---
 
-## 📱 앱 실행 화면
-
-<img src="./assets/img/directions_run.png" width="300" alt="앱 시작 화면" />
-
-> 시작 화면에서는 `Start`, `카카오 로그인`, `Google 로그인` 버튼을 통해 진입할 수 있습니다.
+<img src="./asset/img/directions_run.png" width="300" alt="앱 시작 화면" />
 
 ---
 
