@@ -1,11 +1,7 @@
-# 🏃‍♀️ SMU 운동 기록 앱 (Flutter 기반)
+# <img src="./asset/img/directions_run.png" width="50" alt="앱 시작 화면" /> SMU 운동 기록 앱 (Flutter 기반)
 
 상명대학교 Flutter 프로젝트로 개발된 **운동 기록 및 일정 관리 앱**입니다.  
 Flutter 기반으로 제작되었으며, **카카오/구글 소셜 로그인**, **운동 기록 기능**, **캘린더 연동**, **푸시 알림 설정**, **프로필 관리** 기능을 제공합니다.
-
----
-
-<img src="./asset/img/directions_run.png" width="300" alt="앱 시작 화면" />
 
 ---
 
